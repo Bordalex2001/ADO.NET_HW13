@@ -19,23 +19,23 @@
             <RowDefinition></RowDefinition>
         </Grid.RowDefinitions>
         <Label Content="Ім'я:" Margin="10" Width="66" HorizontalAlignment="Right"/>
-        <TextBox Grid.Column="1" x:Name="authorTxtBox" TextWrapping="Wrap" Width="200" Margin="10" Height="20" HorizontalAlignment="Left"/>
+        <TextBox Grid.Column="1" TextWrapping="Wrap" Width="200" Margin="10" Height="20" HorizontalAlignment="Left" Text="{Binding EmployeeFirstName, UpdateSourceTrigger=PropertyChanged}"/>
         <Label Content="Прізвище:" Margin="10" Width="66" Grid.Row="1" HorizontalAlignment="Right"/>
-        <TextBox x:Name="categoryTxtBox" TextWrapping="Wrap" Width="200" Margin="10" Grid.Row="1" Grid.Column="1" Height="20" HorizontalAlignment="Left"/>
+        <TextBox TextWrapping="Wrap" Width="200" Margin="10" Grid.Row="1" Grid.Column="1" Height="20" HorizontalAlignment="Left" Text="{Binding EmployeeLastName, UpdateSourceTrigger=PropertyChanged}"/>
         <Label Content="Посада:" Margin="10" Width="66" Grid.Row="2" HorizontalAlignment="Right"/>
-        <TextBox x:Name="yearTxtBox" TextWrapping="Wrap" Width="200" Margin="10" Grid.Row="2" Grid.Column="1" Height="20" HorizontalAlignment="Left"/>
+        <TextBox TextWrapping="Wrap" Width="200" Margin="10" Grid.Row="2" Grid.Column="1" Height="20" HorizontalAlignment="Left" Text="{Binding PositionName, UpdateSourceTrigger=PropertyChanged}"/>
         <StackPanel Grid.ColumnSpan="4" Orientation="Horizontal" Grid.Row="3" VerticalAlignment="Center" Margin="10" HorizontalAlignment="Center">
-            <Button x:Name="addBtn" Content="Додати" Width="150" Height="25"/>
-            <Button x:Name="updateBtn" Content="Змінити" Margin="10,0,0,0" Width="150" Height="25"/>
-            <Button x:Name="deleteBtn" Content="Видалити" Margin="10,0,10,0" Width="150" Height="25"/>
-            <Button x:Name="searchBtn" Content="Знайти" Width="150" Height="25"/>
+            <Button x:Name="addBtn" Content="Додати" Width="150" Height="25" Command="{Binding AddEmployee}"/>
+            <Button x:Name="updateBtn" Content="Змінити" Margin="10,0,0,0" Width="150" Height="25" Command="{Binding UpdateEmployee}"/>
+            <Button x:Name="deleteBtn" Content="Видалити" Margin="10,0,10,0" Width="150" Height="25" Command="{Binding DeleteEmployee}"/>
+            <Button x:Name="searchBtn" Content="Знайти" Width="150" Height="25" Command="{Binding SearchEmployees}"/>
         </StackPanel>
-        <DataGrid Grid.Row="4" Grid.ColumnSpan="4"  ItemsSource="{Binding Employees}" SelectedItem="{Binding SelectedEmployee}" AutoGenerateColumns="False" Margin="10">
+        <DataGrid Grid.Row="4" Grid.ColumnSpan="4"  ItemsSource="{Binding EmployeesList}" SelectedItem="{Binding IndexSelectedEmployee}" AutoGenerateColumns="False" Margin="10">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Id" Binding="{Binding Id}" />
-                <DataGridTextColumn Header="First Name" Binding="{Binding FirstName}" />
-                <DataGridTextColumn Header="Last Name" Binding="{Binding LastName}" />
-                <DataGridTextColumn Header="PositionId" Binding="{Binding PositionId}" />
+                <DataGridTextColumn Header="First Name" Binding="{Binding EmployeeFirstName}" />
+                <DataGridTextColumn Header="Last Name" Binding="{Binding EmployeeLastName}" />
+                <DataGridTextColumn Header="PositionId" Binding="{Binding EmployeePositionId}" />
                 <DataGridTextColumn Header="Hire Date" Binding="{Binding HireDate}" />
             </DataGrid.Columns>
         </DataGrid>

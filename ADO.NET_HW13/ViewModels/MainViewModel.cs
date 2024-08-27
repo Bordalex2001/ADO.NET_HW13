@@ -78,26 +78,44 @@ namespace ADO.NET_HW13.ViewModels
             }
         }
 
-        private DelegateCommand _showAllEmployees;
-        public ICommand ShowAllEmployees
+        private int _indexSelectedEmployee = -1;
+
+        public int IndexSelectedEmployee
         {
-            get
+            get { return _indexSelectedEmployee; }
+            set
             {
-                if (_showAllEmployees == null)
-                {
-                    _showAllEmployees = new DelegateCommand(p => ShowAllEmployees(), p => CanShowAllEmployees());
-                }
-                return _showAllEmployees;
+                _indexSelectedEmployee = value;
+                OnPropertyChanged(nameof(IndexSelectedEmployee));
             }
         }
 
-        public void ShowAllEmployees()
+        private DelegateCommand _showAllEmployeesCommand;
+        public ICommand ShowAllEmployeesCommand
+        {
+            get
+            {
+                if (_showAllEmployeesCommand == null)
+                {
+                    _showAllEmployeesCommand = new DelegateCommand(param => ShowAllEmployees(), param => CanShowAllEmployees());
+                }
+                return _showAllEmployeesCommand;
+            }
+        }
+
+        private void ShowAllEmployees()
         {
             try
             {
                 using (EmployeesContext db = new())
                 {
-                    EmployeesList = new ObservableCollection<Employee>(db.Employees.Include(e => e.Position).ToList());
+                    var employees = db.Employees.Include(e => e.Position).ToList();
+
+                    EmployeesList.Clear();
+                    foreach (var employee in employees)
+                    {
+                        EmployeesList.Add(new EmployeeViewModel(employee));
+                    }
                 }
             }
             catch (Exception ex)
@@ -106,13 +124,75 @@ namespace ADO.NET_HW13.ViewModels
             }
         }
 
-        public bool CanShowAllEmployees()
+        private bool CanShowAllEmployees()
         {
             return true;
         }
 
-        private DelegateCommand _addEmployeeCommand;
+        private DelegateCommand _searchEmployeesCommand;
 
+        public ICommand SearchEmployeesCommand
+        {
+            get
+            {
+                if (_searchEmployeesCommand == null)
+                {
+                    _searchEmployeesCommand = new DelegateCommand(param => SearchEmployees(), param => CanSearchEmployees());
+                }
+                return _searchEmployeesCommand;
+            }
+        }
+
+        private void SearchEmployees()
+        {
+            try
+            {
+                string firstName = EmployeeFirstName;
+                string lastName = EmployeeLastName;
+                string position = PositionName;
+
+                using (EmployeesContext db = new())
+                {
+                    //Жадібне завантаження (Eager loading)
+                    /*IQueryable<Book> query = db.Book
+                        .Include(b => b.Authors)
+                        .Include(b => b.Categories)
+                        .Include(b => b.Publishers)
+                        .AsQueryable();*/
+
+                    //Ліниве завантаження (Lazy Loading)
+                    IQueryable<Employee> query = db.Employees.AsQueryable();
+
+                    if (!string.IsNullOrEmpty(firstName))
+                        query = query.Where(e => e.FirstName.Contains(firstName));
+
+                    if (!string.IsNullOrEmpty(lastName))
+                        query = query.Where(e => e.LastName.Contains(lastName));
+
+                    if (!string.IsNullOrEmpty(position))
+                        query = query.Where(b => b.Position.Name.Contains(position));
+
+                    List<Employee> employees = query.Include(e => e.Position).ToList();
+
+                    EmployeesList.Clear();
+                    foreach (Employee employee in employees)
+                    {
+                        EmployeesList.Add(new EmployeeViewModel(employee));
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Windows.MessageBox.Show($"Помилка: {ex.Message}", "Помилка", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private bool CanSearchEmployees()
+        {
+            return !EmployeeFirstName.IsNullOrEmpty() || !EmployeeLastName.IsNullOrEmpty() || !PositionName.IsNullOrEmpty();
+        }
+
+        private DelegateCommand _addEmployeeCommand;
         public ICommand AddEmployeeCommand
         {
             get
@@ -126,7 +206,6 @@ namespace ADO.NET_HW13.ViewModels
         }
 
         private DelegateCommand _deleteEmployeeCommand;
-
         public ICommand DeleteEmployeeCommand
         {
             get
@@ -140,21 +219,6 @@ namespace ADO.NET_HW13.ViewModels
         }
 
         private DelegateCommand _updateEmployeeCommand;
-
-        public ICommand UpdateEmployeeCommand
-        {
-            get
-            {
-                if (_updateEmployeeCommand == null)
-                {
-                    _updateEmployeeCommand = new DelegateCommand(param => UpdateEmployee(), param => CanUpdateEmployee());
-                }
-                return _updateEmployeeCommand;
-            }
-        }
-
-        private DelegateCommand _updateEmployeeCommand;
-
         public ICommand UpdateEmployeeCommand
         {
             get
@@ -212,7 +276,7 @@ namespace ADO.NET_HW13.ViewModels
                 using (EmployeesContext db = new())
                 {
                     //Ліниве завантаження (Lazy loading)
-                    var employeeToDelete = db.Employees.SingleOrDefault(e => e.Id == selectedBook.Id);
+                    var employeeToDelete = db.Employees.SingleOrDefault(e => e.Id == IndexSelectedEmployee);
 
                     db.Employees.Remove(employeeToDelete);
                     db.SaveChanges();
@@ -228,7 +292,7 @@ namespace ADO.NET_HW13.ViewModels
 
         private bool CanDeleteEmployee()
         {
-            return IndexSelectedAuthors != -1;
+            return IndexSelectedEmployee != -1;
         }
 
         private void UpdateEmployee()
@@ -238,7 +302,7 @@ namespace ADO.NET_HW13.ViewModels
                 using (EmployeesContext db = new())
                 {
                     //Ліниве завантаження (Lazy loading)
-                    Employee employeeToUpdate = db.Employees.SingleOrDefault(e => e.Id == selectedBook.Id);
+                    Employee? employeeToUpdate = db.Employees.SingleOrDefault(e => e.Id == IndexSelectedEmployee);
 
                     employeeToUpdate.FirstName = EmployeeFirstName;
                     employeeToUpdate.LastName = EmployeeLastName;
@@ -262,7 +326,8 @@ namespace ADO.NET_HW13.ViewModels
 
         private bool CanUpdateEmployee()
         {
-            return (!EmployeeFirstName.IsNullOrEmpty() || !EmployeeLastName.IsNullOrEmpty()) && IndexSelectedAuthors != -1;
+            return (!EmployeeFirstName.IsNullOrEmpty() || !EmployeeLastName.IsNullOrEmpty()) && IndexSelectedEmployee != -1;
         }
+
     }
 }
